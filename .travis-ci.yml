@@ -1,0 +1,17 @@
+sudo: false
+language: java
+jdk:
+  - oraclejdk8
+
+before_install:
+  - curl -sSLO https://github.com/shyiko/ktlint/releases/download/0.29.0/ktlint && chmod a+x ktlint
+  - chmod +x gradlew
+  - chmod +x gradle/wrapper/gradle-wrapper.jar
+  - cd frontend && npm install && cd ..
+
+script:
+  - ./ktlint "src/**/*.kt"
+  - ./gradlew detekt linuxTest build
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
