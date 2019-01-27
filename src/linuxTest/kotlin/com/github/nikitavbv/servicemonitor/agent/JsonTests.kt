@@ -2,7 +2,6 @@ package com.github.nikitavbv.servicemonitor.agent
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 
 class JsonTests {
@@ -118,6 +117,54 @@ class JsonTests {
     fun testStringEndNoClosingQuote() {
         assertFailsWith<JsonParseError>("No matching closing quote found for index 3 in foo\"bar") {
             findStringEnd("foo\"bar", 3)
+        }
+    }
+
+    @Test
+    fun testNestedEmptyObject() {
+        val result = parseJsonObject("{\"foo\": {}}")
+        assertEquals(1, result.size)
+        assertEquals(0, (result["foo"] as Map<*, *>).size)
+    }
+
+    @Test
+    fun testNestedObject() {
+        val result = parseJsonObject("{\"foo\": {\"bar\": \"42\"}}")
+        assertEquals(1, result.size)
+        val nestedResult = result["foo"] as Map<*, *>
+        assertEquals(1, nestedResult.size)
+        assertEquals("42", nestedResult["bar"])
+    }
+
+    @Test
+    fun testFindObjectEnd() {
+        val result = findObjectEnd("foo {\"hello\": \"world\"} bar", 4)
+        assertEquals(21, result)
+    }
+
+    @Test
+    fun testFindEmptyObjectEnd() {
+        val result = findObjectEnd("foo {} bar", 4)
+        assertEquals(5, result)
+    }
+
+    @Test
+    fun testFindObjectEndEscapedStrings() {
+        val result = findObjectEnd("foo {\"hello\": \"}world}\"} bar", 4)
+        assertEquals(23, result)
+    }
+
+    @Test
+    fun testFindObjectEndInvalidStringLength() {
+        assertFailsWith<AssertionError>("Start index >= string length") {
+            findObjectEnd("foo {} bar", 20)
+        }
+    }
+
+    @Test
+    fun testFindObjectEndNoMatchingBrace() {
+        assertFailsWith<JsonParseError>("No matching close brace found for index 4 in foo { bar") {
+            findObjectEnd("foo { bar", 4)
         }
     }
 }

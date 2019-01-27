@@ -1,5 +1,7 @@
 package com.github.nikitavbv.servicemonitor.agent
 
+import kotlin.math.min
+
 // Simple json parser
 // It is better to replace it later with kotlinx.serialization
 
@@ -30,17 +32,25 @@ fun parseJsonObject(objStr: String): Map<String, Any> {
             throw JsonParseError("Expected colon after json object field name ($fieldName)")
         }
         jsonStr = jsonStr.substring(1).trimStart()
+
         // parse field value
         var fieldValue: Any
-        if (jsonStr[0] == '"') {
-            // string field
-            val valueEndIndex = findStringEnd(jsonStr, 0)
-            fieldValue = jsonStr.substring(1, valueEndIndex)
-            jsonStr = jsonStr.substring(valueEndIndex + 1).trimStart()
-        } else {
-            throw JsonParseError("Unknown field type of $fieldName")
+        var valueEndIndex: Int
+        when {
+            jsonStr[0] == '"' -> {
+                // string field
+                valueEndIndex = findStringEnd(jsonStr, 0)
+                fieldValue = jsonStr.substring(1, valueEndIndex)
+            }
+            jsonStr[0] == '{' -> {
+                // object field
+                valueEndIndex = findObjectEnd(jsonStr, 0)
+                fieldValue = parseJsonObject(jsonStr.substring(0, valueEndIndex+1))
+            }
+            else -> throw JsonParseError("Unknown field type of $fieldName")
         }
 
+        jsonStr = jsonStr.substring(min(valueEndIndex + 1, jsonStr.length)).trimStart()
         result[fieldName] = fieldValue
 
         if (jsonStr.isNotEmpty()) {
@@ -75,4 +85,21 @@ fun findStringEnd(jsonStr: String, startIndex: Int): Int {
         }
     }
     throw JsonParseError("No matching closing quote found for index $startIndex in $jsonStr")
+}
+
+fun findObjectEnd(jsonStr: String, startIndex: Int): Int {
+    if (startIndex >= jsonStr.length) {
+        throw AssertionError("Start index >= string length")
+    }
+
+    var i = startIndex + 1
+    while (i < jsonStr.length) {
+        when {
+            jsonStr[i] == '}' -> return i
+            jsonStr[i] == '"' -> i = findStringEnd(jsonStr, i) + 1
+            else -> i++
+        }
+    }
+
+    throw JsonParseError("No matching close brace found for index $startIndex in $jsonStr")
 }
