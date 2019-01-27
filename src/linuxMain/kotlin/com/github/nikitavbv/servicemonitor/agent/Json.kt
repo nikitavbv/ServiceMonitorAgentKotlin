@@ -34,24 +34,9 @@ fun parseJsonObject(objStr: String): Map<String, Any> {
         jsonStr = jsonStr.substring(1).trimStart()
 
         // parse field value
-        var fieldValue: Any
-        var valueEndIndex: Int
-        when {
-            jsonStr[0] == '"' -> {
-                // string field
-                valueEndIndex = findStringEnd(jsonStr, 0)
-                fieldValue = jsonStr.substring(1, valueEndIndex)
-            }
-            jsonStr[0] == '{' -> {
-                // object field
-                valueEndIndex = findObjectEnd(jsonStr, 0)
-                fieldValue = parseJsonObject(jsonStr.substring(0, valueEndIndex+1))
-            }
-            else -> throw JsonParseError("Unknown field type of $fieldName")
-        }
-
-        jsonStr = jsonStr.substring(min(valueEndIndex + 1, jsonStr.length)).trimStart()
-        result[fieldName] = fieldValue
+        val parsedFieldValue = parseValue(jsonStr)
+        jsonStr = jsonStr.substring(min(parsedFieldValue.second + 1, jsonStr.length)).trimStart()
+        result[fieldName] = parsedFieldValue.first
 
         if (jsonStr.isNotEmpty()) {
             if (jsonStr[0] != ',') {
@@ -102,4 +87,75 @@ fun findObjectEnd(jsonStr: String, startIndex: Int): Int {
     }
 
     throw JsonParseError("No matching close brace found for index $startIndex in $jsonStr")
+}
+
+fun parseJsonArray(arrStr: String): List<Any> {
+    val result = mutableListOf<Any>()
+
+    if (arrStr.isEmpty()) {
+        throw JsonParseError("Empty array string")
+    }
+
+    var jsonStr = arrStr.trim()
+    if (jsonStr[0] != '[' || jsonStr[jsonStr.length - 1] != ']') {
+        throw JsonParseError("Not a json array")
+    }
+    jsonStr = jsonStr.substring(1, jsonStr.length - 1).trim()
+
+    while (jsonStr.isNotEmpty()) {
+        val parsedValue: Pair<Any, Int> = parseValue(jsonStr)
+        jsonStr = jsonStr.substring(min(parsedValue.second + 1, jsonStr.length)).trimStart()
+        result.add(parsedValue.first)
+
+        if (jsonStr.isNotEmpty()) {
+            if (jsonStr[0] != ',') {
+                throw JsonParseError("Expected comma after json array element")
+            }
+
+            jsonStr = jsonStr.substring(1).trimStart()
+        }
+    }
+
+    return result
+}
+
+fun parseValue(jsonStr: String): Pair<Any, Int> {
+    val fieldValue: Any
+    val valueEndIndex: Int
+    when {
+        jsonStr[0] == '"' -> {
+            // string field
+            valueEndIndex = findStringEnd(jsonStr, 0)
+            fieldValue = jsonStr.substring(1, valueEndIndex)
+        }
+        jsonStr[0] == '{' -> {
+            // object field
+            valueEndIndex = findObjectEnd(jsonStr, 0)
+            fieldValue = parseJsonObject(jsonStr.substring(0, valueEndIndex+1))
+        }
+        jsonStr[0] == '[' -> {
+            // array field
+            valueEndIndex = findArrayEnd(jsonStr, 0)
+            fieldValue = parseJsonArray(jsonStr.substring(0, valueEndIndex+1))
+        }
+        else -> throw JsonParseError("Unknown field type: $jsonStr")
+    }
+    return fieldValue to valueEndIndex
+}
+
+fun findArrayEnd(jsonStr: String, startIndex: Int): Int {
+    if (startIndex >= jsonStr.length) {
+        throw AssertionError("Start index >= string length")
+    }
+
+    var i = startIndex + 1
+    while (i < jsonStr.length) {
+        when {
+            jsonStr[i] == ']' -> return i
+            jsonStr[i] == '"' -> i = findStringEnd(jsonStr, i) + 1
+            else -> i++
+        }
+    }
+
+    throw JsonParseError("No matching close bracket found for index $startIndex in $jsonStr")
 }

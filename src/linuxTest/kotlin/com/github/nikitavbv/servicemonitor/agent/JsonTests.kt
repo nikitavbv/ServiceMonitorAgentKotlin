@@ -12,6 +12,11 @@ class JsonTests {
     }
 
     @Test
+    fun testTrimTabs() {
+        assertEquals("abc", " \t   abc     \t ".trim())
+    }
+
+    @Test
     fun testEmptyJsonObject() {
         val result = parseJsonObject("{}")
         assertEquals(0, result.size)
@@ -165,6 +170,97 @@ class JsonTests {
     fun testFindObjectEndNoMatchingBrace() {
         assertFailsWith<JsonParseError>("No matching close brace found for index 4 in foo { bar") {
             findObjectEnd("foo { bar", 4)
+        }
+    }
+
+    @Test
+    fun testParseJsonArray() {
+        val result = parseJsonArray("[\"foo\", \"bar\"]")
+        assertEquals(2, result.size)
+        assertEquals("foo", result[0])
+        assertEquals("bar", result[1])
+    }
+
+    @Test
+    fun testParseEmptyJsonArray() {
+        val result = parseJsonArray("[]")
+        assertEquals(0, result.size)
+    }
+
+    @Test
+    fun testParseNestedArrays() {
+        val result = parseJsonArray("[\"foo\", [\"hello\"], \"bar\"]")
+        assertEquals(3, result.size)
+        assertEquals("foo", result[0])
+        assertEquals("bar", result[2])
+
+        val nestedArray = result[1] as List<*>
+        assertEquals(1, nestedArray.size)
+        assertEquals("hello", nestedArray[0])
+    }
+
+    @Test
+    fun testParseArrayEmptyString() {
+        assertFailsWith<JsonParseError>("Empty array string") {
+            parseJsonArray("")
+        }
+    }
+
+    @Test
+    fun testParseNotAnArray() {
+        assertFailsWith<JsonParseError>("Noa a json array") {
+            parseJsonArray("{}")
+        }
+    }
+
+    @Test
+    fun testParseArrayWithoutComma() {
+        assertFailsWith<JsonParseError>("Expected comma after json array element") {
+            parseJsonArray("[\"foo\" \"bar\"]")
+        }
+    }
+
+    @Test
+    fun testParseJsonObjectWithNestedArray() {
+        val result = parseJsonObject("{\"foo\": \"bar\", \"arr\": [\"hello\", \"world\"]}")
+        assertEquals(2, result.size)
+        assertEquals("bar", result["foo"])
+
+        val nestedArray = result["arr"] as List<*>
+        assertEquals(2, nestedArray.size)
+        assertEquals("hello", nestedArray[0])
+        assertEquals("world", nestedArray[1])
+    }
+
+    @Test
+    fun testFindArrayEnd() {
+        val result = findArrayEnd("foo [\"hello\", \"world\"] bar", 4)
+        assertEquals(21, result)
+    }
+
+    @Test
+    fun testFindEmptyArrayEnd() {
+        val result = findArrayEnd("foo [] bar", 4)
+        assertEquals(5, result)
+    }
+
+    @Test
+    fun testFindArrayEndEscapedStrings() {
+        val result = findArrayEnd("foo [\"hello\", \"]world]\"] bar", 4)
+        assertEquals(23, result)
+    }
+
+    @Test
+    fun testFindArrayEndInvalidStringLength() {
+        assertFailsWith<AssertionError>("Start index >= string length") {
+            findArrayEnd("foo [] bar", 20)
+        }
+    }
+
+    @Test
+    fun testFindArrayEndNoMatchingBrace() {
+        assertFailsWith<JsonParseError>("No matching close bracket found for index 4 in foo [ bar") {
+            findArrayEnd("foo [ bar", 4)
         }
     }
 }
