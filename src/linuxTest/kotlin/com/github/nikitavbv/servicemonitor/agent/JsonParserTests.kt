@@ -4,7 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class JsonTests {
+class JsonParserTests {
 
     @Test
     fun testTrim() {
