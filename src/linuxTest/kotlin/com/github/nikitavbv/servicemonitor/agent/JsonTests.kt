@@ -17,6 +17,11 @@ class JsonTests {
     }
 
     @Test
+    fun testTrimNewLines() {
+        assertEquals("abc", "\t \n  abc \t \n ".trim())
+    }
+
+    @Test
     fun testEmptyJsonObject() {
         val result = parseJsonObject("{}")
         assertEquals(0, result.size)
