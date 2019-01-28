@@ -330,7 +330,7 @@ fun monitorNGINX(params: Map<*, *>): Map<String, Any?> {
     }
     val timestamp = getCurrentTimeMillis()
     val lines = response.toKString().lines()
-    val requests = lines[2].fields()[2]
+    val requests = lines[2].fields()[2].toLong()
     val prevState = nginxPrevState[endpoint] as Map<*, *>?
     if (prevState != null) {
         val prevRequests = prevState["requests"] as Long
