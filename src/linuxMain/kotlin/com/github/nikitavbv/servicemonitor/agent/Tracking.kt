@@ -242,9 +242,12 @@ fun monitorCPUUsage(params: Map<*, *>): Map<String, Any?> {
     return result
 }
 
+@ExperimentalUnsignedTypes
 fun monitorUptime(params: Map<*, *>): Map<String, Any?> {
-    TODO("implement this")
-    return emptyMap()
+    // http://man7.org/linux/man-pages/man5/proc.5.html
+    return mapOf(
+        "uptime" to readFile("/proc/uptime").fields()[0]
+    )
 }
 
 fun monitorDocker(params: Map<*, *>): Map<String, Any?> {
