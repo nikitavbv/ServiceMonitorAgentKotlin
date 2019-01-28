@@ -28,6 +28,9 @@ kotlin {
                         includeDirs "$it/curl"
                     }
                 }
+                nativeAgent {
+                    includeDirs "/home/nikitavbv/Dev/kotlin/ServiceMonitorAgentKotlin/nativeSrc"
+                }
             }
         }
     }
