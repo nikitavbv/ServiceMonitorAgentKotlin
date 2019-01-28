@@ -8,6 +8,7 @@ before_install:
   - chmod +x gradlew
   - chmod +x gradle/wrapper/gradle-wrapper.jar
   - sudo apt update && sudo apt install libcurl4-openssl-dev
+  - dpkg-query -L libcurl4-openssl-dev
 
 script:
   - ./ktlint "src/**/*.kt"
