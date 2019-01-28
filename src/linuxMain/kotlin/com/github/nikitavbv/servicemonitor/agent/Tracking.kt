@@ -6,6 +6,7 @@ import platform.posix.perror
 import nativeAgent.getCurrentTimeRFC3339
 
 val ioPrevState = mutableMapOf<String, Any>()
+val cpuPrevState = mutableMapOf<String, Any>()
 
 @ExperimentalUnsignedTypes
 fun runTrackingIteration() {
@@ -162,8 +163,82 @@ fun monitorDiskUsage(params: Map<*, *>): Map<String, Any?> {
     return emptyMap()
 }
 
+@ExperimentalUnsignedTypes
 fun monitorCPUUsage(params: Map<*, *>): Map<String, Any?> {
-    TODO("implement this")
+    // http://man7.org/linux/man-pages/man5/proc.5.html
+    val result = mutableMapOf<String, Any>()
+    val cpus = mutableListOf<Map<String, Any>>()
+
+    val timestamp = getCurrentTimeMillis()
+    readFile("/proc/stat").lines().forEach { line ->
+        if (line == "") {
+            return@forEach
+        }
+
+        val fields = line.fields()
+        if (!fields[0].startsWith("cpu")) {
+            return@forEach
+        }
+        val cpu = fields[0]
+        val user = fields[1].toLong()
+        val nice = fields[2].toLong()
+        val system = fields[3].toLong()
+        val idle = fields[4].toLong()
+        val iowait = fields[5].toLong()
+        val irq = fields[6].toLong()
+        val softirq = fields[7].toLong()
+        val steal = fields[8].toLong()
+        val guest = fields[9].toLong()
+        val guestNice = fields[10].toLong()
+
+        val prevState = cpuPrevState[cpu] as Map<String, Any>?
+        if (prevState != null) {
+            val prevUser = prevState["user"] as Long
+            val prevNice = prevState["nice"] as Long
+            val prevSystem = prevState["system"] as Long
+            val prevIdle = prevState["idle"] as Long
+            val prevIOWait = prevState["iowait"] as Long
+            val prevIrq = prevState["irq"] as Long
+            val prevSoftIrq = prevState["softirq"] as Long
+            val prevSteal = prevState["steal"] as Long
+            val prevGuest = prevState["guest"] as Long
+            val prevGuestNice = prevState["guestNice"] as Long
+            val prevTimestamp = prevState["timestamp"] as Long
+
+            cpus.add(mapOf(
+                "cpu" to cpu,
+                "user" to (user - prevUser) / ((timestamp - prevTimestamp) / 1000),
+                "nice" to (nice - prevNice) / ((timestamp - prevTimestamp) / 1000),
+                "system" to (system - prevSystem) / ((timestamp - prevTimestamp) / 1000),
+                "idle" to (idle - prevIdle) / ((timestamp - prevTimestamp) / 1000),
+                "iowait" to (iowait - prevIOWait) / ((timestamp - prevTimestamp) / 1000),
+                "irq" to (irq - prevIrq) / ((timestamp - prevTimestamp) / 1000),
+                "softirq" to (softirq - prevSoftIrq) / ((timestamp - prevTimestamp) / 1000),
+                "guest" to (guest - prevGuest) / ((timestamp - prevTimestamp) / 1000),
+                "steal" to (steal - prevSteal) / ((timestamp - prevTimestamp) / 1000),
+                "guestNice" to (guestNice - prevGuestNice) / ((timestamp - prevTimestamp) / 1000)
+            ))
+        }
+        cpuPrevState[cpu] = mapOf(
+            "user" to user,
+            "nice" to nice,
+            "system" to system,
+            "idle" to idle,
+            "iowait" to iowait,
+            "irq" to irq,
+            "softirq" to softirq,
+            "steal" to steal,
+            "guest" to guest,
+            "guestNice" to guestNice,
+            "timestamp" to timestamp
+        )
+    }
+
+    if (cpus.isEmpty()) {
+        return emptyMap()
+    }
+
+    result["cpus"] = cpus
     return emptyMap()
 }
 
