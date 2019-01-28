@@ -43,6 +43,10 @@ const char* makeHTTPRequest(const char* url, const char* method, const char* dat
     if (strcmp("POST", method) == 0) {
         curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, data);
         headers = curl_slist_append(headers, "Content-Type: application/json");
+    } else if (strcmp("PUT", method) == 0) {
+        curl_easy_setopt(curl_handle, CURLOPT_CUSTOMREQUEST, "PUT");
+        curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, data);
+        headers = curl_slist_append(headers, "Content-Type: application/json");
     }
 
     curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "ServiceMonitorAgent/1.0");
