@@ -275,7 +275,7 @@ fun monitorNetwork(params: Map<*, *>): Map<String, Any?> {
             devices.add(mapOf(
                 "device" to deviceName,
                 "bytesSent" to (bytesSent - prevBytesSent) / ((timestamp - prevTimestamp) / 1000),
-                "bytesReceived" to (bytesReceived-prevBytesReceived) / ((timestamp - prevTimestamp) / 1000),
+                "bytesReceived" to (bytesReceived-prevBytesReceived) / ((timestamp - prevTimestamp) / 1000)
             ))
         }
         networkPrevState[deviceName] = mapOf(
@@ -293,8 +293,27 @@ fun monitorNetwork(params: Map<*, *>): Map<String, Any?> {
 }
 
 fun monitorDocker(params: Map<*, *>): Map<String, Any?> {
-    TODO("implement this")
-    return emptyMap()
+    val containers = mutableListOf<Map<String, Any>>()
+
+    runCommand("docker ps --format {{.Image}}|{{.Status}}").lines().forEach { line ->
+        if (line == "" || line.startsWith("CONTAINER")) {
+            return@forEach
+        }
+
+        val fields = line.split("|")
+        val containerStatus = fields[1]
+        val containerName = fields[0]
+
+        containers.add(mapOf(
+            "containerName" to containerName,
+            "status" to containerStatus
+        ))
+    }
+
+    if (containers.isEmpty()) {
+        return emptyMap()
+    }
+    return mapOf("containers" to containers)
 }
 
 fun monitorNGINX(params: Map<*, *>): Map<String, Any?> {
