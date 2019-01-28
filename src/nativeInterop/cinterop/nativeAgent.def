@@ -1,3 +1,4 @@
-headers = /home/nikitavbv/Dev/kotlin/ServiceMonitorAgentKotlin/nativeSrc/agent.h
-headerFilter = /home/nikitavbv/Dev/kotlin/ServiceMonitorAgentKotlin/nativeSrc/*
-compilerOpts.linux = -I/usr/include/x86_64-linux-gnu/curl -I/usr/include/mysql
+headers = /home/travis/build/nikitavbv/ServiceMonitorAgentKotlin/nativeSrc/agent.h
+headerFilter = /home/travis/build/nikitavbv/ServiceMonitorAgentKotlin/nativeSrc/*
+compilerOpts.linux = -I/usr/include/curl -I/usr/include/mysql
+linkerOpts.linux = -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lpthread -lz -lm -ldl -lcurl

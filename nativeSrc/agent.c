@@ -97,7 +97,7 @@ int getMySQLQuestionsNumber(const char* host, const char* user, const char* pass
     }
 
     if (mysql_real_connect(con, host, user, password, database, 0, NULL, 0) == NULL) {
-        finish_with_error(con);
+        fprintf(stderr, "Failed to connect to mysql");
         return -1;
     }
 
