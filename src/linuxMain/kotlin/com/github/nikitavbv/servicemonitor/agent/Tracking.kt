@@ -4,10 +4,12 @@ import kotlinx.cinterop.toKString
 import nativeAgent.getCurrentTimeMillis
 import platform.posix.perror
 import nativeAgent.getCurrentTimeRFC3339
+import nativeAgent.makeHTTPRequest
 
 val ioPrevState = mutableMapOf<String, Any>()
 val cpuPrevState = mutableMapOf<String, Any>()
 val networkPrevState = mutableMapOf<String, Any>()
+val nginxPrevState = mutableMapOf<String, Any>()
 
 @ExperimentalUnsignedTypes
 fun runTrackingIteration() {
@@ -317,8 +319,31 @@ fun monitorDocker(params: Map<*, *>): Map<String, Any?> {
 }
 
 fun monitorNGINX(params: Map<*, *>): Map<String, Any?> {
-    TODO("implement this")
-    return emptyMap()
+    // http://nginx.org/en/docs/http/ngx_http_stub_status_module.html
+    val result = mutableMapOf<String, Any?>()
+    val endpoint = params["endpoint"].toString()
+
+    val response = makeHTTPRequest(endpoint, "GET", "")
+    if (response == null) {
+        println("Error while reading nginx response")
+        return result
+    }
+    val timestamp = getCurrentTimeMillis()
+    val lines = response.toKString().lines()
+    val requests = lines[2].fields()[2]
+    val prevState = nginxPrevState[endpoint] as Map<*, *>?
+    if (prevState != null) {
+        val prevRequests = prevState["requests"] as Long
+        val prevTimestamp = prevState["timestamp"] as Long
+
+        result["requests"] = (requests - prevRequests) / ((timestamp - prevTimestamp) / 1000)
+    }
+    nginxPrevState[endpoint] = mapOf(
+        "requests" to requests,
+        "timestamp" to timestamp
+    )
+
+    return result
 }
 
 fun monitorMySQL(params: Map<*, *>): Map<String, Any?> {
