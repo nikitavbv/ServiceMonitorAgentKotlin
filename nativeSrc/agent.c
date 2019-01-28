@@ -65,3 +65,23 @@ const char* makeHTTPRequest(const char* url, const char* method, const char* dat
     curl_easy_cleanup(curl_handle);
     return chunk.memory;
 }
+
+long int getCurrentTimeMillis() {
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    return tp.tv_sec * 1000 + tp.tv_usec / 1000;
+}
+
+char* getCurrentTimeRFC3339() {
+    time_t now;
+    time(&now);
+    struct tm *p = localtime(&now);
+    char buf[100];
+    size_t len = strftime(buf, sizeof buf - 1, "%FT%T%z", p);
+    // move last 2 digits
+    if (len > 1) {
+        char minute[] = { buf[len-2], buf[len-1], '\0' };
+        sprintf(buf + len - 2, ":%s", minute);
+    }
+    return sprintf("%s", buf);
+}

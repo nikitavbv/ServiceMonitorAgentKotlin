@@ -66,6 +66,7 @@ fun registerAgent() {
     println("Done registering")
 }
 
+@ExperimentalUnsignedTypes
 fun initAgent() {
     val propertiesMap = mapOf(
         "os" to getOSNameAndVersion(),
@@ -78,6 +79,7 @@ fun initAgent() {
     ))
 }
 
+@ExperimentalUnsignedTypes
 fun startTrackingCycle() {
     runTrackingIteration()
 
