@@ -239,7 +239,7 @@ fun monitorCPUUsage(params: Map<*, *>): Map<String, Any?> {
     }
 
     result["cpus"] = cpus
-    return emptyMap()
+    return result
 }
 
 fun monitorUptime(params: Map<*, *>): Map<String, Any?> {
