@@ -50,9 +50,30 @@ fun runTrackingIteration() {
     ))
 }
 
+@ExperimentalUnsignedTypes
 fun monitorMemory(params: Map<*, *>): Map<String, Any?> {
-    TODO("implement this")
-    return emptyMap()
+    // https://www.kernel.org/doc/Documentation/filesystems/proc.txt
+    val result = mutableMapOf<String, Any>()
+
+    readFile("/proc/memFile").lines().forEach { line ->
+        if (line == "") {
+            return@forEach
+        }
+
+        val fields = line.fields()
+        val amount = fields[1].toLong()
+        when(fields[0]) {
+            "MemTotal:" -> result["total"] = amount
+            "MemFree:" -> result["free"] = amount
+            "MemAvailable:" -> result["available"] = amount
+            "Buffers:" -> result["buffers"] = amount
+            "Cached:" -> result["cached"] = amount
+            "SwapTotal:" -> result["swapTotal"] = amount
+            "SwapFree:" -> result["swapFree"] = amount
+        }
+    }
+
+    return result
 }
 
 fun monitorIO(params: Map<*, *>): Map<String, Any?> {

@@ -9,6 +9,7 @@ lateinit var config: AgentConfig
 
 fun checkIfConfigFileExists() = fileExists(CONFIG_FILE_NAME)
 
+@ExperimentalUnsignedTypes
 fun loadConfigFile() {
     val file = fopen(CONFIG_FILE_NAME, "r")
     if (file == null) {

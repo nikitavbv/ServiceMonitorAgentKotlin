@@ -29,6 +29,31 @@ fun runCommand(cmd: String): String {
     return result
 }
 
+@ExperimentalUnsignedTypes
+fun readFile(fileName: String): String {
+    val file = fopen(fileName, "r")
+    if (file == null) {
+        perror("Cannot open file $fileName")
+        exit(-1)
+    }
+    fseek(file, 0, SEEK_END)
+    val fileSize = ftell(file)
+    rewind(file)
+    return memScoped {
+        val buffer = allocArray<ByteVar>(fileSize)
+        val result = fread(buffer, 1, fileSize.convert(), file)
+        if (fileSize != result.toLong()) {
+            perror("File read error: read less bytes than expected from $fileName")
+            exit(-1)
+        }
+        buffer.toKString()
+    }
+}
+
+fun String.fields(): List<String> {
+    return this.split(" ").map { it.trim() }
+}
+
 fun getOSNameAndVersion(): String {
     val lsbOutput = runCommand("lsb_release -d")
     return lsbOutput.replace("Description:", "").trim()
