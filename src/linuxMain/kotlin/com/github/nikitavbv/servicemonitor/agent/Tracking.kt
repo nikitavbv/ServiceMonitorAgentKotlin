@@ -79,10 +79,11 @@ fun monitorMemory(params: Map<*, *>): Map<String, Any?> {
     return result
 }
 
+@ExperimentalUnsignedTypes
 fun monitorIO(params: Map<*, *>): Map<String, Any?> {
     // https://www.kernel.org/doc/Documentation/iostats.txt
     val result = mutableMapOf<String, Any>()
-    result["devices"] = mutableMapOf<String, Any>()
+    val deviceList = mutableListOf<MutableMap<String, Any>>()
 
     readFile("/proc/diskstats").lines().forEach { line ->
         if (line == "") {
@@ -111,7 +112,7 @@ fun monitorIO(params: Map<*, *>): Map<String, Any?> {
             val bytesWritten = (sectorsWritten - prevSectorsWritten) * deviceBlockSize
             val bytesReadPerSecond = (bytesRead) / ((timestamp - prevTimestamp) / 1000)
             val bytesWrittenPerSecond = (bytesWritten) / ((timestamp - prevTimestamp) / 1000)
-            (result["devices"] as MutableList<*>).add(mapOf(
+            deviceList.add(mutableMapOf(
                 "device" to deviceName,
                 "read" to bytesReadPerSecond,
                 "write" to bytesWrittenPerSecond
@@ -124,15 +125,40 @@ fun monitorIO(params: Map<*, *>): Map<String, Any?> {
         )
     }
 
-    if ((result["devices"] as List<*>).size == 0) {
+    if (deviceList.isEmpty()) {
         return emptyMap()
     }
 
+    result["devices"] = deviceList
     return result
 }
 
 fun monitorDiskUsage(params: Map<*, *>): Map<String, Any?> {
-    TODO("implement this")
+    val result = mutableMapOf<String, Any>()
+    val filesystemList = mutableListOf<Map<String, Any>>()
+
+    runCommand("df -x squashfs -x devtmpfs -x tmpfs -x fuse --output=source,size,used")
+        .lines().forEach {line ->
+            if (line == "" || line.startsWith("Filesystem")) {
+                return@forEach
+            }
+
+            val fields = line.fields()
+            val filesystem = fields[0]
+            val total = fields[1].toLong()
+            val used = fields[2].toLong()
+            filesystemList.add(mapOf(
+                "filesystem" to filesystem,
+                "total" to total,
+                "used" to used
+            ))
+        }
+
+    if (filesystemList.isEmpty()) {
+        return emptyMap()
+    }
+
+    result["filesystems"] = filesystemList
     return emptyMap()
 }
 
