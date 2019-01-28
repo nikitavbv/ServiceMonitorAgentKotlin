@@ -138,6 +138,11 @@ fun parseValue(jsonStr: String): Pair<Any, Int> {
             valueEndIndex = findArrayEnd(jsonStr, 0)
             fieldValue = parseJsonArray(jsonStr.substring(0, valueEndIndex+1))
         }
+        jsonStr[0].isDigit() || jsonStr[0] == '-' || jsonStr[0] == '+' -> {
+            // numeric field
+            valueEndIndex = findNumericEnd(jsonStr, 0)
+            fieldValue = jsonStr.substring(0, valueEndIndex+1).toDouble()
+        }
         else -> throw JsonParseError("Unknown field type: $jsonStr")
     }
     return fieldValue to valueEndIndex
@@ -158,4 +163,37 @@ fun findArrayEnd(jsonStr: String, startIndex: Int): Int {
     }
 
     throw JsonParseError("No matching close bracket found for index $startIndex in $jsonStr")
+}
+
+fun findNumericEnd(jsonStr: String, startIndex: Int): Int {
+    if (startIndex >= jsonStr.length) {
+        throw AssertionError("Start index >= string length")
+    }
+
+    var i = startIndex
+    var point = false
+    while (i < jsonStr.length) {
+        if (jsonStr[i] == '.') {
+            if (point) {
+                throw NumberFormatException("Invalid number format: more than one point: $jsonStr")
+            } else {
+                point = true
+            }
+        } else if (jsonStr[i] == '+' || jsonStr[i] == '-') {
+            if (i != startIndex) {
+                throw NumberFormatException("Unexpected number sign: $jsonStr")
+            }
+        } else if (!jsonStr[i].isDigit()) {
+            i--
+            break
+        }
+
+        if (i + 1 < jsonStr.length) {
+            i++
+        } else {
+            break
+        }
+    }
+
+    return i
 }

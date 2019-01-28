@@ -268,4 +268,74 @@ class JsonParserTests {
             findArrayEnd("foo [ bar", 4)
         }
     }
+
+    @Test
+    fun testNumberArray() {
+        val result = parseJsonArray("[1, 21, 3, 4.2, -5]")
+        assertEquals(5, result.size)
+        assertEquals(1.0, result[0])
+        assertEquals(21.0, result[1])
+        assertEquals(3.0, result[2])
+        assertEquals(4.2, result[3])
+        assertEquals(-5.0, result[4])
+    }
+
+    @Test
+    fun testNumberObject() {
+        val result = parseJsonObject("{\"foo\": 4.2, \"bar\": 0}")
+        assertEquals(2, result.size)
+        assertEquals(4.2, result["foo"])
+        assertEquals(0.0, result["bar"])
+    }
+
+    @Test
+    fun testFindNumericEnd() {
+        val result = findNumericEnd("abc 123456 def", 4)
+        assertEquals(9, result)
+    }
+
+    @Test
+    fun testFindNumericEndSingleDigit() {
+        val result = findNumericEnd("abc 1 def", 4)
+        assertEquals(4, result)
+    }
+
+    @Test
+    fun testFindNumericEndWithPoint() {
+        val result = findNumericEnd("abc 123.456 def", 4)
+        assertEquals(10, result)
+    }
+
+    @Test
+    fun testFindNumericEndOutOfBounds() {
+        assertFailsWith<AssertionError>("Start index >= string length") {
+            findNumericEnd("abc 123 def", 20)
+        }
+    }
+
+    @Test
+    fun testFindNumericEndMoreThanOnePoint() {
+        assertFailsWith<NumberFormatException>("Invalid number format: more than one point: abc 1.2.3 def") {
+            findNumericEnd("abc 1.2.3 def", 4)
+        }
+    }
+
+    @Test
+    fun testFindNumericEndPositive() {
+        val result = findNumericEnd("abc +123 def", 4)
+        assertEquals(7, result)
+    }
+
+    @Test
+    fun testFindNumericEndNegative() {
+        val result = findNumericEnd("abc -123 def", 4)
+        assertEquals(7, result)
+    }
+
+    @Test
+    fun testFindNumericEndUnexpectedSign() {
+        assertFailsWith<NumberFormatException>("Unexpected number sign: abc +1+0 def") {
+            findNumericEnd("abc +1+0 def", 4)
+        }
+    }
 }
