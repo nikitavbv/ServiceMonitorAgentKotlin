@@ -29,7 +29,7 @@ kotlin {
                     }
                 }
                 nativeAgent {
-                    includeDirs "/home/nikitavbv/Dev/kotlin/ServiceMonitorAgentKotlin/nativeSrc"
+                    includeDirs "${project.rootDir}/nativeSrc"
                 }
             }
         }
