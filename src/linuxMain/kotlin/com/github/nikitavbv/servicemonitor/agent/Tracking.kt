@@ -7,6 +7,7 @@ import nativeAgent.getCurrentTimeRFC3339
 
 val ioPrevState = mutableMapOf<String, Any>()
 val cpuPrevState = mutableMapOf<String, Any>()
+val networkPrevState = mutableMapOf<String, Any>()
 
 @ExperimentalUnsignedTypes
 fun runTrackingIteration() {
@@ -250,12 +251,48 @@ fun monitorUptime(params: Map<*, *>): Map<String, Any?> {
     )
 }
 
-fun monitorDocker(params: Map<*, *>): Map<String, Any?> {
-    TODO("implement this")
-    return emptyMap()
+@ExperimentalUnsignedTypes
+fun monitorNetwork(params: Map<*, *>): Map<String, Any?> {
+    val devices = mutableListOf<Map<String, Any>>()
+
+    val timestamp = getCurrentTimeMillis()
+    readFile("/proc/net/dev").lines().forEach { line ->
+        if (line == "" || line.contains("|")) {
+            return@forEach
+        }
+
+        val fields = line.fields()
+        val deviceName = fields[0]
+        val bytesReceived = fields[1].toLong()
+        val bytesSent = fields[9].toLong()
+
+        val devicePrevState = networkPrevState[deviceName] as Map<String, Any>?
+        if (devicePrevState != null) {
+            val prevBytesReceived = devicePrevState["bytesReceived"] as Long
+            val prevBytesSent = devicePrevState["bytesSent"] as Long
+            val prevTimestamp = devicePrevState["timestamp"] as Long
+
+            devices.add(mapOf(
+                "device" to deviceName,
+                "bytesSent" to (bytesSent - prevBytesSent) / ((timestamp - prevTimestamp) / 1000),
+                "bytesReceived" to (bytesReceived-prevBytesReceived) / ((timestamp - prevTimestamp) / 1000),
+            ))
+        }
+        networkPrevState[deviceName] = mapOf(
+            "bytesReceived" to bytesReceived,
+            "bytesSent" to bytesSent,
+            "timestamp" to timestamp
+        )
+    }
+
+    if (devices.isEmpty()) {
+        return emptyMap()
+    }
+
+    return mapOf("devices" to devices)
 }
 
-fun monitorNetwork(params: Map<*, *>): Map<String, Any?> {
+fun monitorDocker(params: Map<*, *>): Map<String, Any?> {
     TODO("implement this")
     return emptyMap()
 }
