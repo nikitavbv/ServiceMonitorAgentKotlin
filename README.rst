@@ -16,6 +16,10 @@ Similar to ServiceMonitorAgent_ (which is in Go), but this one is in Kotlin
 
 This is built with ``gradle build``
 
+Used libs:
+   - ``libcurl``
+   - ``libmysqlclient``
+
 .. |Build Status| image:: https://img.shields.io/travis/nikitavbv/ServiceMonitorAgent/master.svg?label=Build%20status
    :target: https://travis-ci.org/nikitavbv/ServiceMonitorAgentKotlin
 .. |license-mit| image:: https://img.shields.io/badge/License-MIT-yellow.svg

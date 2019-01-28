@@ -1,4 +1,5 @@
 #include <curl.h>
+#include <mysql.h>
 
 struct MemoryStruct {
     char *memory;
@@ -84,4 +85,40 @@ char* getCurrentTimeRFC3339() {
         sprintf(buf + len - 2, ":%s", minute);
     }
     return sprintf("%s", buf);
+}
+
+
+int getMySQLQuestionsNumber(const char* host, const char* user, const char* password, const char* database) {
+    MYSQL *con = mysql_init(NULL);
+
+    if (con == NULL) {
+        fprintf(stderr, "mysql_init() failed\n");
+        return -1;
+    }
+
+    if (mysql_real_connect(con, host, user, password, database, 0, NULL, 0) == NULL) {
+        finish_with_error(con);
+        return -1;
+    }
+
+    if (mysql_query(con, "SHOW GLOBAL STATUS LIKE 'Questions'")) {
+        fprintf(stderr, "%s\n", mysql_error(con));
+        mysql_close(con);
+        return -1;
+    }
+
+    MYSQL_RES* result = mysql_store_result(con);
+    if (result == NULL) {
+        fprintf(stderr, "%s\n", mysql_error(con));
+        mysql_close(con);
+        return -1;
+    }
+
+    MYSQL_ROW row = mysql_fetch_row(result);
+    int questions = row[0];
+
+    mysql_free_result(result);
+    mysql_close(con);
+
+    return questions;
 }

@@ -1,3 +1,3 @@
 headers = /home/nikitavbv/Dev/kotlin/ServiceMonitorAgentKotlin/nativeSrc/agent.h
 headerFilter = /home/nikitavbv/Dev/kotlin/ServiceMonitorAgentKotlin/nativeSrc/*
-compilerOpts.linux = -I/usr/include/x86_64-linux-gnu/curl -labc
+compilerOpts.linux = -I/usr/include/x86_64-linux-gnu/curl -I/usr/include/mysql

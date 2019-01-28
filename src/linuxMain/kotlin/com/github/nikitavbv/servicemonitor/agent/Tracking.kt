@@ -4,12 +4,15 @@ import kotlinx.cinterop.toKString
 import nativeAgent.getCurrentTimeMillis
 import platform.posix.perror
 import nativeAgent.getCurrentTimeRFC3339
+import nativeAgent.getMySQLQuestionsNumber
 import nativeAgent.makeHTTPRequest
+import platform.posix.times
 
 val ioPrevState = mutableMapOf<String, Any>()
 val cpuPrevState = mutableMapOf<String, Any>()
 val networkPrevState = mutableMapOf<String, Any>()
 val nginxPrevState = mutableMapOf<String, Any>()
+val mysqlPrevState = mutableMapOf<String, Any>()
 
 @ExperimentalUnsignedTypes
 fun runTrackingIteration() {
@@ -347,6 +350,26 @@ fun monitorNGINX(params: Map<*, *>): Map<String, Any?> {
 }
 
 fun monitorMySQL(params: Map<*, *>): Map<String, Any?> {
-    TODO("implement this")
-    return emptyMap()
+    val connection = (params["connection"] ?: throw RuntimeException("No connection set for mysql")).toString()
+    val user = connection.substring(0, connection.indexOf(":"))
+    val password = connection.substring(connection.indexOf(":"), connection.indexOf("@"))
+    val host = connection.substring(connection.indexOf("@"), connection.indexOf("/"))
+    val database = connection.substring(connection.indexOf("/"))
+
+    val result = mutableMapOf<String, Any>()
+
+    val nValue = getMySQLQuestionsNumber(host, user, password, database)
+    val timestamp = getCurrentTimeMillis()
+    val prevState = mysqlPrevState[connection] as Map<String, Any>?
+    if (prevState != null) {
+        val prevValue = prevState["questions"] as Long
+        val prevTimestamp = prevState["timestamp"] as Long
+        result["questions"] = (nValue - prevValue) / ((timestamp - prevTimestamp) / 1000)
+    }
+    mysqlPrevState[connection] = mapOf(
+        "questions" to nValue,
+        "timestamp" to timestamp
+    )
+
+    return result
 }
