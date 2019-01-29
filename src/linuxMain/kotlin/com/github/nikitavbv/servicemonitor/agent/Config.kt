@@ -1,7 +1,18 @@
 package com.github.nikitavbv.servicemonitor.agent
 
-import kotlinx.cinterop.*
-import platform.posix.*
+import kotlinx.cinterop.ByteVar
+import kotlinx.cinterop.allocArray
+import kotlinx.cinterop.convert
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.toKString
+import platform.posix.SEEK_END
+import platform.posix.exit
+import platform.posix.fopen
+import platform.posix.fread
+import platform.posix.fseek
+import platform.posix.ftell
+import platform.posix.perror
+import platform.posix.rewind
 
 const val CONFIG_FILE_NAME = "/sm/config.json"
 

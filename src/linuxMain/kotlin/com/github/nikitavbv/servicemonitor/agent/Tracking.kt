@@ -32,7 +32,7 @@ fun runTrackingIteration() {
         val targetMap = targetMapData as Map<*, *>
 
         val monitorType = targetMap["type"]
-        val result = when(monitorType) {
+        val result = when (monitorType) {
             "memory" -> monitorMemory(targetMap)
             "io" -> monitorIO(targetMap)
             "diskUsage" -> monitorDiskUsage(targetMap)
@@ -72,7 +72,7 @@ fun monitorMemory(params: Map<*, *>): Map<String, Any?> {
 
         val fields = line.fields()
         val amount = fields[1].toLong()
-        when(fields[0]) {
+        when (fields[0]) {
             "MemTotal:" -> result["total"] = amount
             "MemFree:" -> result["free"] = amount
             "MemAvailable:" -> result["available"] = amount
@@ -145,7 +145,7 @@ fun monitorDiskUsage(params: Map<*, *>): Map<String, Any?> {
     val filesystemList = mutableListOf<Map<String, Any>>()
 
     runCommand("df -x squashfs -x devtmpfs -x tmpfs -x fuse --output=source,size,used")
-        .lines().forEach {line ->
+        .lines().forEach { line ->
             if (line == "" || line.startsWith("Filesystem")) {
                 return@forEach
             }
@@ -280,7 +280,7 @@ fun monitorNetwork(params: Map<*, *>): Map<String, Any?> {
             devices.add(mapOf(
                 "device" to deviceName,
                 "bytesSent" to (bytesSent - prevBytesSent) / ((timestamp - prevTimestamp) / 1000),
-                "bytesReceived" to (bytesReceived-prevBytesReceived) / ((timestamp - prevTimestamp) / 1000)
+                "bytesReceived" to (bytesReceived - prevBytesReceived) / ((timestamp - prevTimestamp) / 1000)
             ))
         }
         networkPrevState[deviceName] = mapOf(
