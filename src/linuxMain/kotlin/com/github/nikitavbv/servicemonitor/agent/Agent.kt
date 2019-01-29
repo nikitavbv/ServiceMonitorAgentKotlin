@@ -1,7 +1,21 @@
 package com.github.nikitavbv.servicemonitor.agent
 
-import kotlinx.cinterop.*
-import platform.posix.*
+import kotlinx.cinterop.ByteVar
+import kotlinx.cinterop.allocArray
+import kotlinx.cinterop.convert
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.toKString
+import platform.posix.SEEK_END
+import platform.posix.exit
+import platform.posix.fclose
+import platform.posix.fopen
+import platform.posix.fputs
+import platform.posix.fread
+import platform.posix.fseek
+import platform.posix.ftell
+import platform.posix.perror
+import platform.posix.rewind
+import platform.posix.sleep
 
 const val STATE_FILE_NAME = "/sm/state.json"
 @ExperimentalUnsignedTypes
@@ -83,7 +97,7 @@ fun initAgent() {
 fun startTrackingCycle() {
     runTrackingIteration()
 
-    while(true) {
+    while (true) {
         sleep(trackingInterval)
         runTrackingIteration()
     }

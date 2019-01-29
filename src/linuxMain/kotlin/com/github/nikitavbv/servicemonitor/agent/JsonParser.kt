@@ -56,7 +56,7 @@ fun findStringEnd(jsonStr: String, startIndex: Int): Int {
     }
 
     var escapeNext = false
-    for (i in startIndex+1 until jsonStr.length) {
+    for (i in startIndex + 1 until jsonStr.length) {
         if (jsonStr[i] == '"') {
             if (escapeNext) {
                 escapeNext = false
@@ -131,17 +131,17 @@ fun parseValue(jsonStr: String): Pair<Any, Int> {
         jsonStr[0] == '{' -> {
             // object field
             valueEndIndex = findObjectEnd(jsonStr, 0)
-            fieldValue = parseJsonObject(jsonStr.substring(0, valueEndIndex+1))
+            fieldValue = parseJsonObject(jsonStr.substring(0, valueEndIndex + 1))
         }
         jsonStr[0] == '[' -> {
             // array field
             valueEndIndex = findArrayEnd(jsonStr, 0)
-            fieldValue = parseJsonArray(jsonStr.substring(0, valueEndIndex+1))
+            fieldValue = parseJsonArray(jsonStr.substring(0, valueEndIndex + 1))
         }
         jsonStr[0].isDigit() || jsonStr[0] == '-' || jsonStr[0] == '+' -> {
             // numeric field
             valueEndIndex = findNumericEnd(jsonStr, 0)
-            fieldValue = jsonStr.substring(0, valueEndIndex+1).toDouble()
+            fieldValue = jsonStr.substring(0, valueEndIndex + 1).toDouble()
         }
         else -> throw JsonParseError("Unknown field type: $jsonStr")
     }

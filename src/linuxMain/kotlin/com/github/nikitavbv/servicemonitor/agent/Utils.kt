@@ -1,10 +1,27 @@
 package com.github.nikitavbv.servicemonitor.agent
 
-import kotlinx.cinterop.*
-import platform.linux.exec
-import platform.linux.getifaddrs
-import platform.linux.ifaddrs
-import platform.posix.*
+import kotlinx.cinterop.ByteVar
+import kotlinx.cinterop.alloc
+import kotlinx.cinterop.allocArray
+import kotlinx.cinterop.convert
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.nativeHeap
+import kotlinx.cinterop.ptr
+import kotlinx.cinterop.toKString
+import platform.posix.SEEK_END
+import platform.posix.errno
+import platform.posix.exit
+import platform.posix.fgets
+import platform.posix.fopen
+import platform.posix.fread
+import platform.posix.fseek
+import platform.posix.ftell
+import platform.posix.pclose
+import platform.posix.perror
+import platform.posix.popen
+import platform.posix.rewind
+import platform.posix.stat
+import platform.posix.strerror
 
 val IP_V4_TO_IGNORE = listOf("127.0.0.1")
 val IP_V6_TO_IGNORE = emptyList<String>()

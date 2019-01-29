@@ -11,8 +11,8 @@ fun toJson(obj: Any): String {
     }
 }
 
-fun mapToJson(map: Map<* ,*>): String {
-    return "{" + map.map { "\"${it.key.toString()}\":${toJson(it.value!!)}" }.joinToString(",") + "}"
+fun mapToJson(map: Map<*, *>): String {
+    return "{" + map.map { "\"${it.key}\":${toJson(it.value!!)}" }.joinToString(",") + "}"
 }
 
 fun listToJson(list: List<*>): String {
